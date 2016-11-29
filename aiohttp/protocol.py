@@ -672,9 +672,14 @@ class HttpMessage(ABC):
 
         self._add_default_headers()
 
+        def fix_header(k):
+            if k.startswith('Sec-Websocket-'):
+                return 'Sec-WebSocket-' + k.partition('Sec-Websocket-')[2]
+            return str(k)
+
         # status + headers
         headers = self.status_line + ''.join(
-            [k + _sep + v + _end for k, v in self.headers.items()])
+            [fix_header(k) + _sep + v + _end for k, v in self.headers.items()])
         headers = headers.encode('utf-8') + b'\r\n'
 
         self.output_length += len(headers)
