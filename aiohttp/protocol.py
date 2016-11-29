@@ -649,7 +649,7 @@ class HttpMessage(ABC):
         for name, value in headers:
             self.add_header(name, value)
 
-    def send_headers(self, _sep=': ', _end='\r\n'):
+    def send_headers(self):
         """Writes headers to a stream. Constructs payload writer."""
         # Chunked response is only for HTTP/1.1 clients or newer
         # and there is no Content-Length header is set.
@@ -678,9 +678,13 @@ class HttpMessage(ABC):
             return str(k)
 
         # status + headers
-        headers = self.status_line + ''.join(
-            [fix_header(k) + _sep + v + _end for k, v in self.headers.items()])
-        headers = headers.encode('utf-8') + b'\r\n'
+        headers = "{}{}\r\n".format(
+            self.status_line,
+            ''.join(
+                "{}: {}\r\n".format(fix_header(k), v)
+                for k, v in self.headers.items()
+            )
+        ).encode()
 
         self.output_length += len(headers)
         self.headers_length = len(headers)
